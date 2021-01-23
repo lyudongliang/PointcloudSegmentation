@@ -1,0 +1,5 @@
+string file_ending
+string file_path
+sensor_msgs/PointCloud2 cloud_in
+---
+bool status
