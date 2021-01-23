@@ -1,0 +1,6 @@
+# use zed2
+roslaunch zed_wrapper zed2.launch
+roslaunch point_cloud_segmentation segmentation.launch segmentation_algorithm:="region"
+rosrun point_cloud_segmentation segment_server.py
+rosrun point_cloud_segmentation save_pointcloud
+rosrun point_cloud_segmentation segment_client.py
