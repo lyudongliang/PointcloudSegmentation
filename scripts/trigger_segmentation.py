@@ -48,8 +48,8 @@ def handle_pointcloud(req):
     # rospy.wait_for_service('/point_cloud_segmenation/point_cloud_segmentation/scene_segmentation')
     segment_func = rospy.ServiceProxy('scene_segmentation', SegmentScene)
     
-    rospy.wait_for_service('pcl_dump')
-    pcl_dump_func = rospy.ServiceProxy('pcl_dump', PointCloudIO)
+    rospy.wait_for_service('dump_scene_service')
+    pcl_dump_func = rospy.ServiceProxy('dump_scene_service', PointCloudIO)
 
     data_directory = "/home/ydkz/catkin_lyu/src/point_cloud_segmentation/data/scene_" 
 

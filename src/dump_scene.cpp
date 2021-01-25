@@ -7,7 +7,6 @@
 #include<pcl/visualization/cloud_viewer.h>
 #include<pcl/point_cloud.h>
 #include <string>
-// #include "beginner_tutorials/AddTwoInts.h"
 #include "pointcloud_segmentation/PointCloudIO.h"
 
 
@@ -45,7 +44,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "dump_scene_server");
   ros::NodeHandle n;
 
-  ros::ServiceServer service = n.advertiseService("dump_scene",  dump_pointcloud);
+  ros::ServiceServer service = n.advertiseService("dump_scene_service",  dump_pointcloud);
   ROS_INFO("Ready to save dump scene.");
   ros::spin();
 

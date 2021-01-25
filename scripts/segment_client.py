@@ -78,8 +78,8 @@ def client(seg_str='pointcloud'):
     print('indices type', type(cur_segmentation.segmented_scene.Indices))
     print('indices len', len(cur_segmentation.segmented_scene.Indices))
 
-    rospy.wait_for_service('dump_scene')
-    pcl_dump_func = rospy.ServiceProxy('dump_scene', PointCloudIO)
+    rospy.wait_for_service('dump_scene_service')
+    pcl_dump_func = rospy.ServiceProxy('dump_scene_service', PointCloudIO)
 
     data_directory = "/home/ydkz/catkin_lyu/src/point_cloud_segmentation/data/scene_" 
 
