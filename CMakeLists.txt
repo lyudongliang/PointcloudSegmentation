@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(PointcloudSegmentation)
+project(pointcloud_segmentation)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -47,9 +47,9 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable(dump_pointcloud src/dump_pointcloud.cpp)
-target_link_libraries(dump_pointcloud ${catkin_LIBRARIES})
-add_dependencies(dump_pointcloud ${PROJECT_NAME}_gencpp)
+add_executable(dump_scene src/dump_scene.cpp)
+target_link_libraries(dump_scene ${catkin_LIBRARIES})
+add_dependencies(dump_scene ${PROJECT_NAME}_gencpp)
 
 install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

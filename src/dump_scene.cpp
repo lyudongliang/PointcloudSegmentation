@@ -11,7 +11,7 @@
 #include "point_cloud_segmentation/PointCloudIO.h"
 
 
-bool save_pointcloud(point_cloud_segmentation::PointCloudIO::Request &req, point_cloud_segmentation::PointCloudIO::Response &res)
+bool dump_pointcloud(point_cloud_segmentation::PointCloudIO::Request &req, point_cloud_segmentation::PointCloudIO::Response &res)
 {
   if (req.file_ending == ".ply")
   {
@@ -42,11 +42,11 @@ bool save_pointcloud(point_cloud_segmentation::PointCloudIO::Request &req, point
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "pcl_dump_server");
+  ros::init(argc, argv, "dump_scene_server");
   ros::NodeHandle n;
 
-  ros::ServiceServer service = n.advertiseService("pcl_dump", save_pointcloud);
-  ROS_INFO("Ready to save pointcloud.");
+  ros::ServiceServer service = n.advertiseService("dump_scene", dump_pointcloud);
+  ROS_INFO("Ready to save dump scene.");
   ros::spin();
 
   return 0;
