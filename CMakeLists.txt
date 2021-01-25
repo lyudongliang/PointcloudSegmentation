@@ -47,9 +47,9 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable(save_pointcloud src/save_pointcloud.cpp)
-target_link_libraries(save_pointcloud ${catkin_LIBRARIES})
-add_dependencies(save_pointcloud ${PROJECT_NAME}_gencpp)
+add_executable(dump_pointcloud src/dump_pointcloud.cpp)
+target_link_libraries(dump_pointcloud ${catkin_LIBRARIES})
+add_dependencies(dump_pointcloud ${PROJECT_NAME}_gencpp)
 
 install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
