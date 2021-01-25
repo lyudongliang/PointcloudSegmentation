@@ -11,7 +11,7 @@
 #include "pointcloud_segmentation/PointCloudIO.h"
 
 
-bool dump_pointcloud(point_cloud_segmentation::PointCloudIO::Request &req, point_cloud_segmentation::PointCloudIO::Response &res)
+bool dump_pointcloud(pointcloud_segmentation::PointCloudIO::Request &req, pointcloud_segmentation::PointCloudIO::Response &res)
 {
   if (req.file_ending == ".ply")
   {
