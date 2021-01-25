@@ -46,7 +46,7 @@ def pointcloud_callback(pointcloud_info):
 def handle_pointcloud(req):
     assert (req.input_str == 'pointcloud')
     # rospy.wait_for_service('/point_cloud_segmenation/point_cloud_segmentation/scene_segmentation')
-    segment_func = rospy.ServiceProxy('/point_cloud_segmenation/point_cloud_segmentation/scene_segmentation', SegmentScene)
+    segment_func = rospy.ServiceProxy('scene_segmentation', SegmentScene)
     
     rospy.wait_for_service('pcl_dump')
     pcl_dump_func = rospy.ServiceProxy('pcl_dump', PointCloudIO)
@@ -67,12 +67,12 @@ def handle_pointcloud(req):
 
 
 def server():
-    rospy.init_node('segment_server_node', anonymous=True)
+    rospy.init_node('trigger_segmentation_node', anonymous=True)
     # rospy.Subscriber('/zed2/zed_node/point_cloud/cloud_registered', PointCloud2, pointcloud_callback, queue_size=1)
     rospy.Subscriber('/camera/depth/color/points', PointCloud2, pointcloud_callback, queue_size=10)
-    rospy.wait_for_service('/point_cloud_segmenation/point_cloud_segmentation/scene_segmentation')
-    rospy.Service('segment_server', CurrentSegment, handle_pointcloud)
-    rospy.loginfo("Ready to segment pointcloud.")
+    rospy.wait_for_service('scene_segmentation')
+    rospy.Service('trigger_segmentation', CurrentSegment, handle_pointcloud)
+    rospy.loginfo("Ready to trigger segmentation.")
     rospy.spin()
 
 

@@ -62,9 +62,9 @@ current_pointcloud = CachePointCloud()
 
 
 def client(seg_str='pointcloud'):
-    rospy.wait_for_service('segment_server')
+    rospy.wait_for_service('trigger_segmentation')
     
-    seg_func = rospy.ServiceProxy('segment_server', CurrentSegment)
+    seg_func = rospy.ServiceProxy('trigger_segmentation', CurrentSegment)
     cur_segmentation = seg_func(seg_str)
 
     colored_pc = cur_segmentation.segmented_scene.colored_cloud

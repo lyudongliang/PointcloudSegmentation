@@ -10,13 +10,14 @@ from point_cloud_segmentation.srv import SegmentScene
 def handle_scene(req):
     print('handle scene.')
     print('cloud width: %i, cloud height: %i'%(req.cloud_in.width, req.cloud_in.height))
+
     pass
 
 
 def scene_server():
-    rospy.init_node('segment_scene_server_node', anonymous=True)
+    rospy.init_node('scene_segmentation_node', anonymous=True)
     
-    rospy.Service('segment_scene_server', SegmentScene, handle_scene)
+    rospy.Service('scene_segmentation', SegmentScene, handle_scene)
     rospy.loginfo("Ready to segment scene.")
     rospy.spin()
 

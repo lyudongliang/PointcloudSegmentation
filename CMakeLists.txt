@@ -57,6 +57,7 @@ install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 catkin_install_python(PROGRAMS
   scripts/segment_client.py
-  scripts/segment_server.py
+  scripts/trigger_segmentation.py
+  scripts/segment_scene.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
