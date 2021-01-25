@@ -4,7 +4,7 @@ import os
 import rospy
 import numpy as np
 from sensor_msgs.msg import PointCloud2
-from point_cloud_segmentation.srv import SegmentScene
+from pointcloud_segmentation.srv import SegmentScene
 
 
 def handle_scene(req):

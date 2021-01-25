@@ -5,7 +5,7 @@ import rospy
 import copy
 import numpy as np
 from sensor_msgs.msg import PointCloud2
-from point_cloud_segmentation.srv import CurrentSegment, SegmentScene, PointCloudIO
+from pointcloud_segmentation.srv import CurrentSegment, SegmentScene, PointCloudIO
 
 
 class CachePointCloud:
@@ -78,8 +78,8 @@ def client(seg_str='pointcloud'):
     print('indices type', type(cur_segmentation.segmented_scene.Indices))
     print('indices len', len(cur_segmentation.segmented_scene.Indices))
 
-    rospy.wait_for_service('pcl_dump')
-    pcl_dump_func = rospy.ServiceProxy('pcl_dump', PointCloudIO)
+    rospy.wait_for_service('dump_scene')
+    pcl_dump_func = rospy.ServiceProxy('dump_scene', PointCloudIO)
 
     data_directory = "/home/ydkz/catkin_lyu/src/point_cloud_segmentation/data/scene_" 
 
