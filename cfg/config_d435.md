@@ -1,11 +1,10 @@
 # use d435
 roslaunch realsense2_camera rs_camera.launch filters:=pointcloud
 
-roslaunch point_cloud_segmentation segmentation_d435.launch segmentation_algorithm:="region"
-roslaunch point_cloud_segmentation segmentation_d435.launch segmentation_algorithm:="region" smoothness_threshold:=0.15 curvature_threshold:=0.015
+rosrun pointcloud_segmentation segment_scene.py
 
-rosrun point_cloud_segmentation segment_server.py
+rosrun pointcloud_segmentation trigger_segmentation.py
 
-rosrun point_cloud_segmentation save_pointcloud
+rosrun pointcloud_segmentation save_pointcloud
 
-rosrun point_cloud_segmentation segment_client.py
+rosrun pointcloud_segmentation segment_client.py
