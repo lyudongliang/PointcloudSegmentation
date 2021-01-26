@@ -48,7 +48,7 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
 add_executable(dump_scene src/dump_scene.cpp)
-target_link_libraries(dump_scene ${catkin_LIBRARIES})
+target_link_libraries(dump_scene ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(dump_scene ${PROJECT_NAME}_gencpp)
 
 #install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
