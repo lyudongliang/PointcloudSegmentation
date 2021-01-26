@@ -6,9 +6,10 @@ import numpy as np
 import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
 from pointcloud_segmentation.srv import SegmentScene
+from sklearn.neighbors import NearestNeighbors
 
 
-MAX_DIST = 1e8
+MAX_DIST = 1000
 
 
 def get_pos_3d(cloud_info, x_index, y_index, obj_width, obj_height):
@@ -45,15 +46,47 @@ def get_cloud_pts(cloud_info):
         if  -MAX_DIST < p[0] < MAX_DIST and -MAX_DIST < p[1] < MAX_DIST and -MAX_DIST < p[2] < MAX_DIST:
             pts_3d_list.append((p[0], p[1], p[2]))
 
+    pts_3d_list = list(filter(lambda pt:  0.0 <  pt[2] < 3.0, pts_3d_list))
     print('len of cloud pts', len(pts_3d_list))
     print('head 10 pts', pts_3d_list[:10])
+    return pts_3d_list
+
+
+def get_nearest_neighbor(pts):
+    import time
+    start_time = time.time()
+    print('pts shape', pts.shape)
+    neigh = NearestNeighbors(radius=0.01)
+
+    neigh.fit(pts)  
+    
+    neigh_matrix = neigh.radius_neighbors_graph(pts)
+    print(type(neigh_matrix.data))
+    print(len(neigh_matrix.data))
+    print(neigh_matrix.indices)
+    print(len(neigh_matrix.indices))
+    print(neigh_matrix.indptr)
+    print(len(neigh_matrix.indptr))
+    indices = neigh_matrix.indices
+    indptr = neigh_matrix.indptr
+
+    valid_count = 0
+    for i in range(len(indptr) - 1):
+        col_indices = indices[indptr[i]:indptr[i + 1]]
+        if len(col_indices) > 20:
+            # print(len(col_indices))
+            valid_count += 1
+    print('valid_count', valid_count)
+
+    print('get neighbor time', time.time() - start_time)
 
 
 def handle_scene(req):
     print('handle scene.')
     print('cloud width: %i, cloud height: %i'%(req.cloud_in.width, req.cloud_in.height))
 
-    get_cloud_pts(req.cloud_in)
+    cloud_pts = get_cloud_pts(req.cloud_in)
+    get_nearest_neighbor(np.array(cloud_pts, dtype=np.float32))
     pass
 
 

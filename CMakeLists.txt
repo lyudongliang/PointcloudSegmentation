@@ -51,9 +51,6 @@ add_executable(dump_scene src/dump_scene.cpp)
 target_link_libraries(dump_scene ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(dump_scene ${PROJECT_NAME}_gencpp)
 
-#install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-#install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-
 
 catkin_install_python(PROGRAMS
   scripts/segment_client.py
