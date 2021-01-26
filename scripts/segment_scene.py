@@ -10,6 +10,7 @@ from sklearn.neighbors import NearestNeighbors
 
 
 MAX_DIST = 1000
+VECTOR_EPSILON = 0.0001
 
 
 def get_pos_3d(cloud_info, x_index, y_index, obj_width, obj_height):
@@ -52,11 +53,34 @@ def get_cloud_pts(cloud_info):
     return pts_3d_list
 
 
+def dump_obj_file(file_path, pt_list):
+    with open(file_path, 'w') as f:
+        for pt in pt_list:
+            pt_str = list(map(str, pt))
+            line = 'v ' +  ' '.join(pt_str) + ' \n'
+            f.write(line)
+
+
+def calc_pt_flatness(pt, neigh_list):
+    sum_unit_vt = np.array([0, 0, 0])
+    vt_count = 0
+    for neigh_pt in neigh_list:
+        tangent_vt = neigh_pt - pt
+        tangent_vt_norm = np.linalg.norm(tangent_vt)
+        if tangent_vt_norm > VECTOR_EPSILON:
+            tangent_vt /= tangent_vt_norm
+            sum_unit_vt += tangent_vt
+            vt_count += 1
+    
+    average_vt = sum_unit_vt / vt_count
+    return np.linalg.norm(average_vt) < 0.1
+
+
 def get_nearest_neighbor(pts):
     import time
     start_time = time.time()
     print('pts shape', pts.shape)
-    neigh = NearestNeighbors(radius=0.01)
+    neigh = NearestNeighbors(radius=0.02)
 
     neigh.fit(pts)  
     
@@ -70,15 +94,24 @@ def get_nearest_neighbor(pts):
     indices = neigh_matrix.indices
     indptr = neigh_matrix.indptr
 
+    # get kernel pts.
+    kernel_pts = list()
     valid_count = 0
     for i in range(len(indptr) - 1):
         col_indices = indices[indptr[i]:indptr[i + 1]]
-        if len(col_indices) > 20:
-            # print(len(col_indices))
+        if len(col_indices) > 10:
+            kernel_pts.append(list(pts[i]))
             valid_count += 1
     print('valid_count', valid_count)
-
     print('get neighbor time', time.time() - start_time)
+
+    obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/kernel_scene.obj')
+    dump_obj_file(obj_file, kernel_pts)
+
+    # calc normal vector for kernel pts.
+    
+    pass
+
 
 
 def handle_scene(req):
@@ -86,6 +119,9 @@ def handle_scene(req):
     print('cloud width: %i, cloud height: %i'%(req.cloud_in.width, req.cloud_in.height))
 
     cloud_pts = get_cloud_pts(req.cloud_in)
+    obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/original_scene.obj')
+    dump_obj_file(obj_file, cloud_pts)
+
     get_nearest_neighbor(np.array(cloud_pts, dtype=np.float32))
     pass
 
