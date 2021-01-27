@@ -11,34 +11,10 @@ from sklearn.neighbors import NearestNeighbors
 
 MAX_DIST = 1000
 VECTOR_EPSILON = 0.0001
-RADIUS_EPSILON = 0.01
+RADIUS_EPSILON = 0.02
 PT_NUM = 10
+LIMITED_PT_NUM = 50
 PT_COLORS = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255], [255, 0, 255], [255, 255, 0]]
-
-
-def get_pos_3d(cloud_info, x_index, y_index, obj_width, obj_height):
-    uv_list = [[int(x_index+i-5), y_index+j-5] for i in range(11) for j in range(11)]
-
-    gen_2d = pc2.read_points(cloud_info, skip_nans=True, field_names=('y', 'z'), uvs=uv_list)
-    gen_depth = pc2.read_points(cloud_info, skip_nans=True, field_names=('x'), uvs=uv_list)
-    
-    pts_2d_list = []
-    for p in gen_2d:
-        if  -MAX_DIST < p[0] < MAX_DIST and -MAX_DIST < p[1] < MAX_DIST:
-            pts_2d_list.append((p[0], p[1]))
-    
-    depth_list = []
-    for p in gen_depth:
-        if -MAX_DIST < p[0] < MAX_DIST:
-            depth_list.append(p[0])
-
-    if len(pts_2d_list) > 0 and len(depth_list) > 0:
-        pt_2d = np.mean(np.array(pts_2d_list), 0)
-        depth = np.mean(np.array(depth_list))
-        pt_3d = np.array([depth, pt_2d[0], pt_2d[1]])
-        return pt_3d
-    else:
-        return np.array([MAX_DIST, MAX_DIST, MAX_DIST])
 
 
 def get_cloud_pts(cloud_info):
@@ -52,7 +28,6 @@ def get_cloud_pts(cloud_info):
 
     pts_3d_list = list(filter(lambda pt:  0.0 <  pt[2] < 3.0, pts_3d_list))
     print('len of cloud pts', len(pts_3d_list))
-    print('head 10 pts', pts_3d_list[:10])
     return pts_3d_list
 
 
@@ -64,10 +39,17 @@ def dump_obj_file(file_path, pt_list):
             f.write(line)
 
 
-def get_pt_flatness(pt, neigh_list):
+def get_pt_flatness_unit_vt(pt, neigh_list):
+    if len(neigh_list) < LIMITED_PT_NUM:
+        limited_neigh_pts = neigh_list
+    else:
+        new_indices = np.random.permutation(np.arange(len(neigh_list)))
+        limited_neigh_pts = [neigh_list[new_indices[i]] for i in range(LIMITED_PT_NUM)]
+    
+    limited_neigh_pts = neigh_list
     sum_unit_vt = np.array([0., 0., 0.])
     vt_count = 0
-    for neigh_pt in neigh_list:
+    for neigh_pt in limited_neigh_pts:
         tangent_vt = neigh_pt - pt
         tangent_vt_norm = np.linalg.norm(tangent_vt)
         if tangent_vt_norm > VECTOR_EPSILON:
@@ -79,7 +61,15 @@ def get_pt_flatness(pt, neigh_list):
         return 0
 
     average_vt = sum_unit_vt / vt_count
-    return int(np.linalg.norm(average_vt) < 0.2)
+    return int(np.linalg.norm(average_vt) < 0.1)
+
+
+def get_pt_flatness(pt, neigh_list):
+    if len(neigh_list) == 0:
+        return 0
+    
+    mean_vt = np.mean(np.array(neigh_list) - np.array(pt), axis=0)
+    return int(np.linalg.norm(mean_vt) < 0.001)
 
 
 def calc_labels(pts):
@@ -92,12 +82,6 @@ def calc_labels(pts):
     neigh.fit(pts)  
     
     neigh_matrix = neigh.radius_neighbors_graph(pts)
-    print(type(neigh_matrix.data))
-    print(len(neigh_matrix.data))
-    print(neigh_matrix.indices)
-    print(len(neigh_matrix.indices))
-    print(neigh_matrix.indptr)
-    print(len(neigh_matrix.indptr))
     indices = neigh_matrix.indices
     indptr = neigh_matrix.indptr
 
@@ -149,8 +133,6 @@ def calc_labels(pts):
                             seeds.add(query_id)
             cluster_id += 1
 
-    print('pt labels', pt_labels)
-    # print('labels set', set(pt_labels))
     print('labels len', len(set(pt_labels)))
     label_dict = {label_index: [] for label_index in set(pt_labels)}
     for i, _label in enumerate(pt_labels):
@@ -166,6 +148,23 @@ def dump_label(file_path, label_dict):
             f.write(line)
 
 
+def get_colored_pts(pt_labels_dict, pt_list):
+    pt_labels_list = [[_label, _indices] for _label, _indices in pt_labels_dict.items()]
+    pt_labels_list = list(sorted(pt_labels_list, key=lambda line: -len(line[1])))
+
+    _colored_pts = []
+    for _new_cluster_id, line in enumerate(pt_labels_list):
+        _label, _indices = line
+        if _label == -1 or _new_cluster_id >= len(PT_COLORS):
+            continue
+        for _pt_id in _indices:
+            pt = pt_list[_pt_id]
+            pt_color = PT_COLORS[_new_cluster_id]
+            _colored_pts.append([pt[0], pt[1], pt[2], pt_color[0], pt_color[1], pt_color[2]])
+    
+    return _colored_pts
+
+
 def handle_scene(req):
     print('handle scene.')
     print('cloud width: %i, cloud height: %i'%(req.cloud_in.width, req.cloud_in.height))
@@ -179,7 +178,8 @@ def handle_scene(req):
     dump_label(label_file, cloud_pt_labels)
 
     segmented_obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/segmented_scene.obj')
-    dump_obj_file(segmented_obj_file, )
+    colored_pts = get_colored_pts(cloud_pt_labels, cloud_pts)
+    dump_obj_file(segmented_obj_file, colored_pts)
 
     pass
 
