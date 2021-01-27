@@ -11,6 +11,9 @@ from sklearn.neighbors import NearestNeighbors
 
 MAX_DIST = 1000
 VECTOR_EPSILON = 0.0001
+RADIUS_EPSILON = 0.01
+PT_NUM = 10
+PT_COLORS = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255], [255, 0, 255], [255, 255, 0]]
 
 
 def get_pos_3d(cloud_info, x_index, y_index, obj_width, obj_height):
@@ -61,8 +64,8 @@ def dump_obj_file(file_path, pt_list):
             f.write(line)
 
 
-def calc_pt_flatness(pt, neigh_list):
-    sum_unit_vt = np.array([0, 0, 0])
+def get_pt_flatness(pt, neigh_list):
+    sum_unit_vt = np.array([0., 0., 0.])
     vt_count = 0
     for neigh_pt in neigh_list:
         tangent_vt = neigh_pt - pt
@@ -72,15 +75,19 @@ def calc_pt_flatness(pt, neigh_list):
             sum_unit_vt += tangent_vt
             vt_count += 1
     
+    if vt_count == 0:
+        return 0
+
     average_vt = sum_unit_vt / vt_count
-    return np.linalg.norm(average_vt) < 0.1
+    return int(np.linalg.norm(average_vt) < 0.2)
 
 
-def get_nearest_neighbor(pts):
+def calc_labels(pts):
     import time
     start_time = time.time()
     print('pts shape', pts.shape)
-    neigh = NearestNeighbors(radius=0.02)
+    
+    neigh = NearestNeighbors(radius=RADIUS_EPSILON)
 
     neigh.fit(pts)  
     
@@ -95,23 +102,68 @@ def get_nearest_neighbor(pts):
     indptr = neigh_matrix.indptr
 
     # get kernel pts.
-    kernel_pts = list()
-    valid_count = 0
+    core_pts = list()
+    core_pt_indices = list()
     for i in range(len(indptr) - 1):
         col_indices = indices[indptr[i]:indptr[i + 1]]
-        if len(col_indices) > 10:
-            kernel_pts.append(list(pts[i]))
-            valid_count += 1
-    print('valid_count', valid_count)
+        if len(col_indices) > PT_NUM:
+            core_pt_indices.append(i)
+            core_pts.append(list(pts[i]))
+
+    print('core pts count', len(core_pts))
     print('get neighbor time', time.time() - start_time)
 
     obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/kernel_scene.obj')
-    dump_obj_file(obj_file, kernel_pts)
+    dump_obj_file(obj_file, core_pts)
 
-    # calc normal vector for kernel pts.
+    # calc flatness for core pts.
+    pt_flatness = np.array([get_pt_flatness(pts[i], pts[indices[indptr[i]:indptr[i + 1]]])  for i in range(len(indptr) - 1)])
+    print('pt flatness', pt_flatness)
+    print('flat count', np.sum(pt_flatness))
+
+    pt_labels = np.full((len(pts), ), -1)
+
+    def _get_neighbor(pt_index, check_label):
+        _neighbor_list = list()
+        candidate_indices = indices[indptr[pt_index]:indptr[pt_index + 1]]
+        for _index in candidate_indices:
+            if pt_flatness[_index] == 1 and (check_label and pt_labels[_index] == -1 or not check_label):
+                _neighbor_list.append(_index)
+        
+        return _neighbor_list
     
-    pass
+    cluster_id = 0
+    for pt_id in core_pt_indices:
+        if pt_labels[pt_id] == -1:
+            pt_labels[pt_id] = cluster_id
+            pt_neighbors = _get_neighbor(pt_id, check_label=True)
+            seeds = set(pt_neighbors)
 
+            while len(seeds) > 0:
+                new_pt_id = seeds.pop()
+                pt_labels[new_pt_id] = cluster_id
+                query_indices = _get_neighbor(new_pt_id, check_label=False)
+                if len(query_indices) >= PT_NUM:
+                    for query_id in query_indices:
+                        if pt_labels[query_id] == -1:
+                            seeds.add(query_id)
+            cluster_id += 1
+
+    print('pt labels', pt_labels)
+    # print('labels set', set(pt_labels))
+    print('labels len', len(set(pt_labels)))
+    label_dict = {label_index: [] for label_index in set(pt_labels)}
+    for i, _label in enumerate(pt_labels):
+        label_dict[_label].append(i)
+    
+    return label_dict
+
+
+def dump_label(file_path, label_dict):
+    with open(file_path, 'w') as f:
+        for _label, _indices in label_dict.items():
+            line = str(_label) + ' ' + str(len(_indices)) + ' ' + ' '.join(list(map(str, _indices))) + '\n'
+            f.write(line)
 
 
 def handle_scene(req):
@@ -122,7 +174,13 @@ def handle_scene(req):
     obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/original_scene.obj')
     dump_obj_file(obj_file, cloud_pts)
 
-    get_nearest_neighbor(np.array(cloud_pts, dtype=np.float32))
+    cloud_pt_labels = calc_labels(np.array(cloud_pts, dtype=np.float32))
+    label_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/pt_label.txt')
+    dump_label(label_file, cloud_pt_labels)
+
+    segmented_obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/segmented_scene.obj')
+    dump_obj_file(segmented_obj_file, )
+
     pass
 
 
