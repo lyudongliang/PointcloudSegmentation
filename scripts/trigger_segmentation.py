@@ -4,31 +4,7 @@ import os
 import rospy
 import numpy as np
 from sensor_msgs.msg import PointCloud2
-from pointcloud_segmentation.srv import CurrentSegment, SegmentScene, PointCloudIO
-
-
-# class PointCloudSegmentation:
-#     def __init__(self):
-#         self.pc = PointCloud2()
-    
-#     def callback(self):
-#         rospy.init_node('segment_server_node', anonymous=True)
-#         rospy.Service('segment_server', CurrentSegment, self.handle_pointcloud)
-#         rospy.spin()
-    
-#     def pointcloud_callback(self, pointcloud_info):
-#         self.pc = pointcloud_info
-    
-#     def handle_pointcloud(self, req):
-#         assert (req.input_str == 'pointcloud')
-
-#         pc_sub = rospy.Subscriber('/zed2/zed_node/point_cloud/cloud_registered', PointCloud2, self.pointcloud_callback, queue_size=1)
-
-#         rospy.wait_for_service('/point_cloud_segmenation/point_cloud_segmentation/scene_segmentation')
-#         segment_func = rospy.ServiceProxy('/point_cloud_segmenation/point_cloud_segmentation/scene_segmentation', SegmentScene)
-#         _segmentation = segment_func(self.pc)
-
-#         return _segmentation.segmented_scene
+from pointcloud_segmentation.srv import SegmentStatus, SegmentScene, PointCloudIO
 
 
 class CachePointCloud:
@@ -45,7 +21,6 @@ def pointcloud_callback(pointcloud_info):
 
 def handle_pointcloud(req):
     assert (req.input_str == 'pointcloud')
-    # rospy.wait_for_service('/point_cloud_segmenation/point_cloud_segmentation/scene_segmentation')
     segment_func = rospy.ServiceProxy('scene_segmentation', SegmentScene)
     
     rospy.wait_for_service('dump_scene_service')
@@ -60,25 +35,19 @@ def handle_pointcloud(req):
     
     print('original width %i, height %i'%(current_pointcloud.pc.width, current_pointcloud.pc.height) )
     _segmentation = segment_func(current_pointcloud.pc)
-    colored_pc = _segmentation.segmented_scene.colored_cloud
-    print('segmented width %i, height %i'%(colored_pc.width, colored_pc.height) )
 
-    return _segmentation.segmented_scene
+    return _segmentation.segment_status
 
 
 def server():
     rospy.init_node('trigger_segmentation_node', anonymous=True)
-    # rospy.Subscriber('/zed2/zed_node/point_cloud/cloud_registered', PointCloud2, pointcloud_callback, queue_size=1)
     rospy.Subscriber('/camera/depth/color/points', PointCloud2, pointcloud_callback, queue_size=10)
     rospy.wait_for_service('scene_segmentation')
-    rospy.Service('trigger_segmentation', CurrentSegment, handle_pointcloud)
+    rospy.Service('trigger_segmentation', SegmentStatus, handle_pointcloud)
     rospy.loginfo("Ready to trigger segmentation.")
     rospy.spin()
 
 
 if __name__ == "__main__":
     server()
-    # pcs = PointCloudSegmentation()
-    # pcs.callback()
     
-

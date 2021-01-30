@@ -18,10 +18,11 @@ bool dump_pointcloud(pointcloud_segmentation::PointCloudIO::Request &req, pointc
     // pcl::PointCloud<pcl::PointXYZ> pclCloud;
     pcl::fromROSMsg(req.cloud_in, pclCloud);
     
-    pcl::PLYWriter writer;
-    bool binary = false;
-    bool use_camera = false;
-    writer.write(req.file_path, pclCloud, binary, use_camera);
+    pcl::io::savePLYFile(req.file_path, pclCloud);
+    // pcl::PLYWriter writer;
+    // bool binary = false;
+    // bool use_camera = false;
+    // writer.write(req.file_path, pclCloud, binary, use_camera);
   }
   else if (req.file_ending == ".pcd")
   {

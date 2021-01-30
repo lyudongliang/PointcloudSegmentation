@@ -29,6 +29,7 @@ add_service_files(
   FILES
   PointCloudIO.srv
   CurrentSegment.srv
+  SegmentStatus.srv
   SegmentScene.srv
   ChangeSegmentationMethod.srv
   ChangeSegmentationMethod.srv

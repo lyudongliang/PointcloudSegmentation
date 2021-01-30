@@ -177,8 +177,8 @@ def handle_scene(req):
     dump_obj_file(obj_file, cloud_pts)
 
     cloud_pt_labels = calc_labels(np.array(cloud_pts, dtype=np.float32))
-    label_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/pt_label.txt')
-    dump_label(label_file, cloud_pt_labels)
+    # label_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/pt_label.txt')
+    # dump_label(label_file, cloud_pt_labels)
 
     segmented_obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data', TIME_STR + '_segmented_scene.obj')
     colored_pts = get_colored_pts(cloud_pt_labels, cloud_pts)
