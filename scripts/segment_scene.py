@@ -2,6 +2,7 @@
 
 import os
 import rospy
+import time
 import numpy as np
 import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
@@ -12,9 +13,9 @@ from sklearn.neighbors import NearestNeighbors
 MAX_DIST = 1000
 VECTOR_EPSILON = 0.0001
 RADIUS_EPSILON = 0.02
-PT_NUM = 10
+PT_NUM = 20
 LIMITED_PT_NUM = 50
-PT_COLORS = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255], [255, 0, 255], [255, 255, 0]]
+PT_COLORS = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255], [255, 0, 255], [255, 255, 0], [128, 0, 0], [0, 128, 0], [0, 0, 128]]
 
 
 def get_cloud_pts(cloud_info):
@@ -166,18 +167,20 @@ def get_colored_pts(pt_labels_dict, pt_list):
 
 
 def handle_scene(req):
-    print('handle scene.')
+    print('handle scene------------------')
     print('cloud width: %i, cloud height: %i'%(req.cloud_in.width, req.cloud_in.height))
 
+    TIME_STR = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+
     cloud_pts = get_cloud_pts(req.cloud_in)
-    obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/original_scene.obj')
+    obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data', TIME_STR + '_original_scene.obj')
     dump_obj_file(obj_file, cloud_pts)
 
     cloud_pt_labels = calc_labels(np.array(cloud_pts, dtype=np.float32))
     label_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/pt_label.txt')
     dump_label(label_file, cloud_pt_labels)
 
-    segmented_obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data/segmented_scene.obj')
+    segmented_obj_file = os.path.join(os.path.abspath(''), 'src/pointcloud_segmentation/data', TIME_STR + '_segmented_scene.obj')
     colored_pts = get_colored_pts(cloud_pt_labels, cloud_pts)
     dump_obj_file(segmented_obj_file, colored_pts)
 
